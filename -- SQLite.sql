@@ -132,19 +132,22 @@ order by DimProduct.ProductKey;
 -- 3.5.1
 -- My answers:
 
-SELECT
+SELECT 
+  r.ResellerKey,
   r.ResellerName,
   g.CountryRegionCode,
-  s.SalesOrderNumber,
+  s.ResellerKey,
   p.ProductKey,
   p.EnglishProductName,
   sb.ProductSubCategoryKey,
   c.EnglishProductCategoryName,
-  sb.EnglishProductSubCategoryName
+  sb.EnglishProductSubCategoryName,
+  s.SalesOrderNumber,
+  s.SalesAmount
 FROM DimReseller r
-LEFT JOIN DimGeography g
+ JOIN DimGeography g
   ON r.GeographyKey = g.GeographyKey
-LEFT JOIN FactResellerSales s
+ JOIN FactResellerSales s
   ON r.ResellerKey = s.ResellerKey
 LEFT JOIN DimProduct p
   ON s.ProductKey = p.ProductKey
@@ -152,12 +155,41 @@ LEFT JOIN DimProductSubCategory sb
   ON p.ProductSubCategoryKey = sb.ProductSubCategoryKey
 LEFT JOIN DimProductCategory c
   ON sb.ProductCategoryKey = c.ProductCategoryKey
+-- Filters
 WHERE g.CountryRegionCode = 'US'
-  AND (g.CountryRegionCode is null or
-  s.SalesOrderNumber is null or
+  AND 
+  (s.SalesOrderNumber is null or
   p.ProductKey is null or
   p.EnglishProductName is null or
   sb.ProductSubCategoryKey is null or
   c.EnglishProductCategoryName is null or
-  sb.EnglishProductSubCategoryName is null)
-  ;
+  sb.EnglishProductSubCategoryName is null
+  );
+
+
+-- Solution:
+Select 
+ResellerName,
+AddressLine1,
+AddressLine2,
+G.City,
+G.StateProvinceCode,
+G.PostalCode,
+G.CountryRegionCode,
+S.ProductKey,
+P.ProductSubcategoryKey,
+S.SalesAmount
+FROM
+DimReseller as R
+LEFT JOIN FactResellerSales as S
+ ON R.ResellerKey = S.ResellerKey
+INNER JOIN DimGeography as G
+ ON R.GeographyKey = G.GeographyKey
+LEFT JOIN DimProduct as P
+ ON S.ProductKey = P.ProductKey
+-- Filters
+WHERE G.CountryRegionCode = 'US'
+  AND S.ProductKey is null or
+P.ProductSubcategoryKey is null or
+S.SalesAmount is null
+ORDER BY S.SalesAmount ASC;
