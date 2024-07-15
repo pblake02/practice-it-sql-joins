@@ -132,7 +132,7 @@ order by DimProduct.ProductKey;
 -- 3.5.1
 -- My answers:
 
-SELECT 
+SELECT
   -- r.ResellerKey,
   r.ResellerName,
   g.CountryRegionCode,
@@ -147,13 +147,15 @@ SELECT
 -- Window functions for fun
   AVG(s.SalesAmount) OVER(PARTITION BY sb.ProductSubCategoryKey) as subcat_avg,
   MIN(s.SalesAmount) OVER(PARTITION BY sb.ProductSubCategoryKey) as subcat_min,
-  MAX(s.SalesAmount) OVER(PARTITION BY sb.ProductSubCategoryKey) as subcat_max
+  MAX(s.SalesAmount) OVER(PARTITION BY sb.ProductSubCategoryKey) as subcat_max,
+  RANK() OVER(ORDER BY s.SalesAmount DESC) as overall_rank,
+  RANK() OVER(PARTITION BY sb.ProductSubCategoryKey ORDER BY s.SalesAmount DESC) as subcat_rank
 FROM DimReseller r
 JOIN DimGeography g
   ON r.GeographyKey = g.GeographyKey
 -- ***Note: There are some Resellers with no sales thus different rec counts if use a left vs inner join from the DimReseller to the FactResellerSales table (see below)
--- JOIN FactResellerSales s
-LEFT JOIN FactResellerSales s
+JOIN FactResellerSales s
+-- LEFT JOIN FactResellerSales s
   ON r.ResellerKey = s.ResellerKey
 LEFT JOIN DimProduct p
   ON s.ProductKey = p.ProductKey
@@ -170,6 +172,7 @@ WHERE g.CountryRegionCode = 'US'
   -- sb.ProductSubCategoryKey is null or
   -- c.EnglishProductCategoryName is null or
   -- sb.EnglishProductSubCategoryName is null)
+  -- ORDER BY s.SalesAmount DESC, sb.ProductCategoryKey, sb.ProductSubCategoryKey
   ;
 
 
