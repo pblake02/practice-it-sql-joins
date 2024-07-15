@@ -133,21 +133,27 @@ order by DimProduct.ProductKey;
 -- My answers:
 
 SELECT 
-  r.ResellerKey,
+  -- r.ResellerKey,
   r.ResellerName,
   g.CountryRegionCode,
-  s.ResellerKey,
-  p.ProductKey,
-  p.EnglishProductName,
-  sb.ProductSubCategoryKey,
-  c.EnglishProductCategoryName,
-  sb.EnglishProductSubCategoryName,
+  -- s.ResellerKey,
   s.SalesOrderNumber,
-  s.SalesAmount
+  -- p.ProductKey,
+  p.EnglishProductName as ProductName,
+  -- sb.ProductSubCategoryKey,
+  c.EnglishProductCategoryName as ProductCategoryName,
+  sb.EnglishProductSubCategoryName as ProductSubCategoryName,
+  s.SalesAmount,
+-- Window functions for fun
+  AVG(s.SalesAmount) OVER(PARTITION BY sb.ProductSubCategoryKey) as subcat_avg,
+  MIN(s.SalesAmount) OVER(PARTITION BY sb.ProductSubCategoryKey) as subcat_min,
+  MAX(s.SalesAmount) OVER(PARTITION BY sb.ProductSubCategoryKey) as subcat_max
 FROM DimReseller r
- JOIN DimGeography g
+JOIN DimGeography g
   ON r.GeographyKey = g.GeographyKey
- JOIN FactResellerSales s
+-- ***Note: There are some Resellers with no sales thus different rec counts if use a left vs inner join from the DimReseller to the FactResellerSales table (see below)
+-- JOIN FactResellerSales s
+LEFT JOIN FactResellerSales s
   ON r.ResellerKey = s.ResellerKey
 LEFT JOIN DimProduct p
   ON s.ProductKey = p.ProductKey
@@ -157,18 +163,19 @@ LEFT JOIN DimProductCategory c
   ON sb.ProductCategoryKey = c.ProductCategoryKey
 -- Filters
 WHERE g.CountryRegionCode = 'US'
-  AND 
-  (s.SalesOrderNumber is null or
-  p.ProductKey is null or
-  p.EnglishProductName is null or
-  sb.ProductSubCategoryKey is null or
-  c.EnglishProductCategoryName is null or
-  sb.EnglishProductSubCategoryName is null
-  );
+  -- AND
+  -- (s.SalesOrderNumber is null or
+  -- p.ProductKey is null or
+  -- p.EnglishProductName is null or
+  -- sb.ProductSubCategoryKey is null or
+  -- c.EnglishProductCategoryName is null or
+  -- sb.EnglishProductSubCategoryName is null)
+  ;
 
 
 -- Solution:
 Select 
+-- R.ResellerKey, -- Line added by me to do additional recon
 ResellerName,
 AddressLine1,
 AddressLine2,
@@ -187,9 +194,9 @@ INNER JOIN DimGeography as G
  ON R.GeographyKey = G.GeographyKey
 LEFT JOIN DimProduct as P
  ON S.ProductKey = P.ProductKey
--- Filters
 WHERE G.CountryRegionCode = 'US'
-  AND S.ProductKey is null or
-P.ProductSubcategoryKey is null or
-S.SalesAmount is null
+-- Lines added by me to do additional recon
+--   AND (S.ProductKey is null or
+-- P.ProductSubcategoryKey is null or
+-- S.SalesAmount is null)
 ORDER BY S.SalesAmount ASC;
