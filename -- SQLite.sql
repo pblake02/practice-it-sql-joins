@@ -207,6 +207,7 @@ ORDER BY S.SalesAmount ASC;
 
 -- 4.5.1
 -- My answer:
+
 -- Select i.CustomerKey, c.CustomerKey
 Select i.*, c.*
 from FactInternetSales i
