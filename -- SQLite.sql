@@ -136,7 +136,7 @@ SELECT
   -- r.ResellerKey,
   r.ResellerName,
   g.CountryRegionCode,
-  -- s.ResellerKey,
+  -- s.ResellerKey,z
   s.SalesOrderNumber,
   -- p.ProductKey,
   p.EnglishProductName as ProductName,
@@ -203,3 +203,21 @@ WHERE G.CountryRegionCode = 'US'
 -- P.ProductSubcategoryKey is null or
 -- S.SalesAmount is null)
 ORDER BY S.SalesAmount ASC;
+
+
+-- 4.5.1
+-- My answer:
+-- Select i.CustomerKey, c.CustomerKey
+Select i.*, c.*
+from FactInternetSales i
+LEFT JOIN customer_address_us c
+ON i.CustomerKey = c.CustomerKey
+-- WHERE i.CustomerKey = c.CustomerKey
+UNION ALL
+-- Select i.CustomerKey, c.CustomerKey
+Select i.*, c.*
+from customer_address_us c
+LEFT JOIN FactInternetSales i
+ON i.CustomerKey = c.CustomerKey
+-- WHERE i.CustomerKey = c.CustomerKey
+ORDER BY i.CustomerKey;
